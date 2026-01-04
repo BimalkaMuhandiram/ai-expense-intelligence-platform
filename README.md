@@ -1,10 +1,21 @@
 # AI Expense Intelligence Platform
 
-A full-stack application for tracking, analyzing, and predicting personal expenses
-using Machine Learning and modern web technologies.
+A full-stack backend system built with FastAPI, PostgreSQL, and JWT authentication.
+
+## Features
+- User registration & login
+- JWT-based authentication
+- Role-based access control
+- Secure password hashing
+- Modular backend architecture
 
 ## Tech Stack
-- Backend: FastAPI, PostgreSQL
-- Frontend: React (TypeScript)
-- ML: Scikit-learn
-- DevOps: Docker, GitHub Actions
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- JWT (python-jose)
+- Docker (planned)
+- ML integration (planned)
+
+## Status
+In active development

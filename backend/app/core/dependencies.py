@@ -18,3 +18,8 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         return user_id
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+def require_admin(user_id: str = Depends(get_current_user)):
+    # for now, assume admin manually
+    if user_id != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
