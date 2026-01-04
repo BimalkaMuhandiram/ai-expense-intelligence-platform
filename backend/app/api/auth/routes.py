@@ -39,7 +39,10 @@ async def register_user(
     await db.commit()
     await db.refresh(new_user)
 
-    return {"message": "User registered successfully"}
+    return {
+        "success": True,
+        "message": "User registered successfully"
+    }
 
 @router.post("/login")
 async def login_user(
@@ -52,7 +55,10 @@ async def login_user(
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    access_token = create_access_token({"sub": str(user.id)})
+    access_token = create_access_token({
+        "sub": str(user.id),
+        "role": user.role
+    })
 
     return {
         "access_token": access_token,
