@@ -6,7 +6,7 @@ from app.core.security import verify_password
 from app.core.jwt import create_access_token
 from app.schemas.auth import LoginRequest
 
-from app.core.database import get_db
+from app.db.session import get_db
 from app.core.security import hash_password
 from app.schemas.user import UserCreate
 from app.models.user import User

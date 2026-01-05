@@ -6,6 +6,7 @@ from app.models import user
 from app.api.auth.routes import router as auth_router
 from app.core.dependencies import get_current_user
 from app.core.dependencies import require_admin
+from app.api.expenses.routes import router as expense_router
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 
@@ -15,6 +16,7 @@ async def startup():
         await conn.run_sync(Base.metadata.create_all)
 
 app.include_router(auth_router)
+app.include_router(expense_router)
 
 @app.get("/health")
 def health_check():
