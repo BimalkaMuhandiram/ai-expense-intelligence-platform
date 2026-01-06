@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy import func
 from app.services.ai_insights import generate_insight
 from app.services.trend_analysis import analyze_trends
+from app.services.analytics import monthly_comparison
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -137,3 +138,33 @@ async def expense_trends(
     expenses = result.scalars().all()
 
     return analyze_trends(expenses)
+
+@router.get("/analytics/monthly")
+async def monthly_analytics(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(
+        select(Expense).where(Expense.user_id == user.id)
+    )
+    expenses = result.scalars().all()
+
+    return monthly_comparison(expenses)
+
+@router.get("/dashboard/summary")
+async def dashboard_summary(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(
+        select(Expense).where(Expense.user_id == user.id)
+    )
+    expenses = result.scalars().all()
+
+    total = sum(e.amount for e in expenses)
+
+    return {
+        "total_expenses": total,
+        "expense_count": len(expenses),
+        "latest_expense": expenses[-1].amount if expenses else 0
+    }
