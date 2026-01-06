@@ -168,3 +168,39 @@ async def dashboard_summary(
         "expense_count": len(expenses),
         "latest_expense": expenses[-1].amount if expenses else 0
     }
+
+@router.get("/paginated", response_model=list[ExpenseResponse])
+async def paginated_expenses(
+    page: int = 1,
+    limit: int = 10,
+    sort_by: str = "created_at",
+    order: str = "desc",
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    if limit > 50:
+        limit = 50
+
+    if page < 1:
+        page = 1
+        
+    offset = (page - 1) * limit
+
+    query = select(Expense).where(
+        Expense.user_id == user.id
+    )
+
+    if sort_by == "amount":
+        query = query.order_by(
+            Expense.amount.desc() if order == "desc" else Expense.amount.asc()
+        )
+    else:
+        query = query.order_by(
+            Expense.created_at.desc() if order == "desc" else Expense.created_at.asc()
+        )
+
+    result = await db.execute(
+        query.offset(offset).limit(limit)
+    )
+
+    return result.scalars().all()
