@@ -9,6 +9,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy import func
 from app.services.ai_insights import generate_insight
+from app.services.trend_analysis import analyze_trends
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -124,3 +125,15 @@ async def expense_ai_insights(
         "summary": summary,
         "ai_insight": insight
     }
+
+@router.get("/ai/trends")
+async def expense_trends(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(
+        select(Expense).where(Expense.user_id == user.id)
+    )
+    expenses = result.scalars().all()
+
+    return analyze_trends(expenses)
