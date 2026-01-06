@@ -11,6 +11,7 @@ from sqlalchemy import func
 from app.services.ai_insights import generate_insight
 from app.services.trend_analysis import analyze_trends
 from app.services.analytics import monthly_comparison
+from app.core.logging import logger
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -32,6 +33,8 @@ async def create_expense(
     db.add(new_expense)
     await db.commit()   
     await db.refresh(new_expense)  
+
+    logger.info(f"Expense created | user_id={user.id} | amount={expense.amount}")
 
     return new_expense
 
@@ -183,7 +186,7 @@ async def paginated_expenses(
 
     if page < 1:
         page = 1
-        
+
     offset = (page - 1) * limit
 
     query = select(Expense).where(
