@@ -156,3 +156,59 @@ async def spending_alerts(
         "limit": budget.monthly_limit,
         "spent": total_spent
     }
+
+@router.get("/ml-dataset")
+async def ml_dataset(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(
+        select(
+            Expense.amount,
+            Expense.category,
+            Expense.created_at
+        )
+        .where(Expense.user_id == user.id)
+        .order_by(Expense.created_at)
+    )
+
+    rows = result.all()
+
+    return [
+        {
+            "amount": row.amount,
+            "category": row.category,
+            "date": row.created_at.date()
+        }
+        for row in rows
+    ]
+
+@router.get("/ml-dataset/range")
+async def ml_dataset_by_date(
+    start_date: date,
+    end_date: date,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(
+        select(
+            Expense.amount,
+            Expense.category,
+            Expense.created_at
+        )
+        .where(Expense.user_id == user.id)
+        .where(Expense.created_at >= start_date)
+        .where(Expense.created_at <= end_date)
+        .order_by(Expense.created_at)
+    )
+
+    rows = result.all()
+
+    return [
+        {
+            "amount": row.amount,
+            "category": row.category,
+            "date": row.created_at.date()
+        }
+        for row in rows
+    ]
