@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from app.db.session import get_db
 from app.models.expense import Expense
 from app.api.auth.dependencies import get_current_user
+from app.ml.forecast import forecast_next_month
 
 router = APIRouter(
     prefix="/analytics",
@@ -212,3 +213,38 @@ async def ml_dataset_by_date(
         }
         for row in rows
     ]
+
+@router.get("/forecast/monthly")
+async def forecast_monthly_expense(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(
+        select(
+            Expense.amount,
+            Expense.created_at
+        )
+        .where(Expense.user_id == user.id)
+        .order_by(Expense.created_at)
+    )
+
+    rows = result.all()
+
+    expenses = [
+        {
+            "amount": row.amount,
+            "date": row.created_at.date()
+        }
+        for row in rows
+    ]
+
+    prediction = forecast_next_month(expenses)
+
+    if prediction is None:
+        return {
+            "message": "Not enough data to forecast"
+        }
+
+    return {
+        "predicted_next_month_spending": prediction
+    }
