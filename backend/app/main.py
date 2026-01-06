@@ -10,8 +10,10 @@ from app.api.expenses.routes import router as expense_router
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from app.core.exceptions import AppException
+from app.api.admin.routes import router as admin_router
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
+app.include_router(admin_router)
 
 @app.on_event("startup")
 async def startup():
