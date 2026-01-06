@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy import func
+from app.services.ai_insights import generate_insight
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -94,4 +95,32 @@ async def monthly_summary(
             {"category": r.category, "amount": r.total}
             for r in rows
         ]
+    }
+
+@router.get("/ai/insights")
+async def expense_ai_insights(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(
+        select(
+            func.sum(Expense.amount).label("total"),
+            Expense.category
+        )
+        .where(Expense.user_id == user.id)
+        .group_by(Expense.category)
+    )
+
+    rows = result.all()
+
+    summary = {
+        "total": sum(r.total for r in rows),
+        "by_category": {r.category: r.total for r in rows}
+    }
+
+    insight = generate_insight(summary)
+
+    return {
+        "summary": summary,
+        "ai_insight": insight
     }
