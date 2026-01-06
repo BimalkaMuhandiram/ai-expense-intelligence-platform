@@ -12,10 +12,12 @@ from fastapi.responses import JSONResponse
 from app.core.exceptions import AppException
 from app.api.admin.routes import router as admin_router
 from app.api.analytics.routes import router as analytics_router
+from app.api.budgets.routes import router as budget_router
 
 app = FastAPI(title=settings.APP_NAME, debug=settings.DEBUG)
 app.include_router(admin_router)
 app.include_router(analytics_router)
+app.include_router(budget_router)
 
 @app.on_event("startup")
 async def startup():

@@ -113,3 +113,46 @@ async def last_30_days_trend(
         }
         for row in rows
     ]
+
+@router.get("/alerts")
+async def spending_alerts(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    from datetime import date
+    from sqlalchemy import func
+    from app.models.budget import Budget
+
+    today = date.today()
+
+    budget_result = await db.execute(
+        select(Budget)
+        .where(Budget.user_id == user.id)
+        .order_by(Budget.created_at.desc())
+    )
+    budget = budget_result.scalar_one_or_none()
+
+    if not budget:
+        return {"alert": "No budget set"}
+
+    expense_result = await db.execute(
+        select(func.coalesce(func.sum(Expense.amount), 0))
+        .where(Expense.user_id == user.id)
+        .where(func.date_part("month", Expense.created_at) == today.month)
+        .where(func.date_part("year", Expense.created_at) == today.year)
+    )
+
+    total_spent = expense_result.scalar()
+
+    if total_spent > budget.monthly_limit:
+        return {
+            "alert": "Over budget",
+            "limit": budget.monthly_limit,
+            "spent": total_spent
+        }
+
+    return {
+        "alert": "Within budget",
+        "limit": budget.monthly_limit,
+        "spent": total_spent
+    }
