@@ -7,6 +7,7 @@ from app.db.session import get_db
 from app.models.expense import Expense
 from app.api.auth.dependencies import get_current_user
 from app.ml.forecast import forecast_next_month
+from app.ml.anomaly import detect_anomalies
 
 router = APIRouter(
     prefix="/analytics",
@@ -247,4 +248,36 @@ async def forecast_monthly_expense(
 
     return {
         "predicted_next_month_spending": prediction
+    }
+
+@router.get("/anomalies")
+async def detect_expense_anomalies(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user)
+):
+    result = await db.execute(
+        select(
+            Expense.amount,
+            Expense.category,
+            Expense.created_at
+        )
+        .where(Expense.user_id == user.id)
+    )
+
+    rows = result.all()
+
+    expenses = [
+        {
+            "amount": row.amount,
+            "category": row.category,
+            "date": row.created_at.date()
+        }
+        for row in rows
+    ]
+
+    anomalies = detect_anomalies(expenses)
+
+    return {
+        "count": len(anomalies),
+        "anomalies": anomalies
     }
